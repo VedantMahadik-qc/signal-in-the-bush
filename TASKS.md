@@ -13,14 +13,11 @@ Four tracks, sized to run in parallel. Full technical detail for every item is i
 - [x] Sanity-check against Wall et al. 2013 / external sources — **finding, not just a check:** `site_id=7` (65 fixes) sits ~8km from Lake Banzena, the documented primary dry-season water source for this entire elephant population (one of only two lakes that don't dry up; "elephants and humans rely heavily on it"). The *dominant* cluster `site_id=0` (6,603 fixes) is a different, unidentified location ~50km away. **Implication for Track B:** pure fix-count weighting underrates Banzena (currently weight 0.0098) relative to its real ecological importance — exactly the failure mode demonnslayer flagged, now confirmed in real data. Track B should consider a known-landmark boost, not just raw `n_fixes`, before finalizing $c_i$.
 
 ## Track B — QUBO & Classical Baselines
-Split in two, after van's correctness catch ([README §6-7](README.md#6-step-2--qubo-formulation)) — this is **not** literal max-coverage, it's a pairwise-penalty proxy, for qubit-budget reasons. Don't conflate the two baselines below.
+Split in two, after van's correctness catch ([README §6-7](README.md#6-step-2--qubo-formulation)) — this is **not** literal maximum coverage. Don't collapse the two baselines.
 
-- [x] **True max-coverage baseline — van's branch.** Real coverage sets (fixes within radius $r$ of each site), exact ILP + greedy with the real $1{-}1/e$ guarantee, $k=3$. Van hit a push permission error on their branch — check their GitHub collaborator role is set to **Write** (not Read/Triage) in repo Settings → Collaborators, then merge it in.
-- [ ] **Proxy QUBO baseline — demonnslayer.** Build $Q_{overlap}$ from pairwise distance against the real `data/candidate_sites.csv` (not mock data — Track A is done)
-- [ ] Implement the soft-penalty QUBO — **not** `qiskit_optimization`'s inequality→slack converter (reread §6, it's a qubit-budget trap)
-- [ ] Apply the Lake Banzena landmark boost to $c_i$ (§5/§6) before finalizing weights
-- [ ] Exact brute-force optimum of the proxy QUBO itself, timed — this validates/tunes $A$, it is not the true-coverage baseline above
-- [ ] At the end: report QAOA-vs-proxy-optimum **and** proxy-result-vs-true-coverage-optimum as two separate numbers (§7) — don't collapse them
+- [x] **True GPS-fix max coverage — van.** `scripts/true_max_coverage.py`. Each site covers Salif Keita transit fixes within a 25 km ranger-team radius. Exact OR-Tools and greedy both select sites **0, 2, 5** (1,179 of 7,066 fixes, 16.7%). Proxy sites 0, 2, 7 cover 1,125 fixes (15.9%). Results: `data/true_coverage_results.json`.
+- [x] **Proxy QUBO — `scripts/build_qubo.py` and `scripts/optimize_sites.py`.** Pairwise redundancy, Lake Banzena boost, soft-penalty QUBO, no slack qubits. Exact/greedy proxy select sites **0, 2, 7**. $A=0.5$ is validated. Track C coefficients stay in `data/qubo_*.npy`; timed proxy results are in `data/track_b_results.json`.
+- [x] Report QAOA-vs-proxy optimum (Track C) and proxy-vs-true-GPS-coverage optimum as separate numbers (§7)
 
 ## Track C — QAOA / Qollab / IonQ Execution
 - [ ] Start now building the Qiskit harness against a toy random QUBO — don't wait on Track B

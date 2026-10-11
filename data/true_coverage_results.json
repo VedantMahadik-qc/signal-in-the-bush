@@ -1,0 +1,58 @@
+{
+  "model": "true maximum coverage of transit GPS fixes",
+  "assumptions": {
+    "individual": "Salif Keita",
+    "transit_speed_kmh": 0.5,
+    "coverage_radius_km": 25.0,
+    "team_budget": 3
+  },
+  "total_transit_fixes": 7066,
+  "coverage_count_by_site": {
+    "0": 776,
+    "2": 234,
+    "7": 115,
+    "4": 66,
+    "5": 175,
+    "3": 104,
+    "1": 133,
+    "6": 58
+  },
+  "exact": {
+    "selected_site_ids": [
+      0,
+      2,
+      5
+    ],
+    "covered_transit_fixes": 1179,
+    "coverage_fraction": 0.16685536371355789
+  },
+  "greedy": {
+    "selected_site_ids": [
+      0,
+      2,
+      5
+    ],
+    "covered_transit_fixes": 1179,
+    "coverage_fraction": 0.16685536371355789
+  },
+  "proxy_selection": {
+    "selected_site_ids": [
+      0,
+      2,
+      7
+    ],
+    "covered_transit_fixes": 1125,
+    "coverage_fraction": 0.15921313331446363
+  },
+  "timing": {
+    "runs": 30,
+    "exact_ortools": {
+      "mean_ms": 103.8090868,
+      "std_ms": 27.22507553738832
+    },
+    "greedy": {
+      "mean_ms": 0.20241056666666665,
+      "std_ms": 0.0803844069591789
+    }
+  }
+}
