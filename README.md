@@ -103,7 +103,9 @@ Two different baselines, answering two different questions — don't collapse th
 
 **At submission time, report both comparisons, honestly labeled:** (a) QAOA vs. the proxy's own exact optimum — this is the real "how good is our QAOA" number; (b) the proxy's chosen sites evaluated under the *true* coverage metric vs. the true optimum from (1) — this is the honest "what did we give up by compressing into a QAOA-friendly proxy" number. Showing both is a better, more interesting result than hiding the gap.
 
-**Result (`scripts/build_qubo.py`, $n=8$, $k=3$, $r=400$m):** both baselines agree exactly — true max-coverage exact, true max-coverage greedy, and the proxy QUBO's own exact optimum all select the same 3 sites, **[0, 2, 7]** (site 7 = Lake Banzena), at **100% of true-optimum coverage** (6,923 of 6,923 fixes). Greedy's approximation ratio is 1.000 here (guarantee only required $\ge 0.632$). The proxy formulation cost nothing at this scale — gap (b) above is 0%. Robust across a penalty-weight ($A$) sweep from 0.5 to 5.0.
+**Proxy result (`scripts/build_qubo.py` / `scripts/optimize_sites.py`, $n=8$, $k=3$):** the pairwise-penalty QUBO and its exact/greedy solvers select **[0, 2, 7]** (site 7 = Lake Banzena). $A=0.5$ reproduces that exact answer. Track C uses this proxy as its target.
+
+**True GPS-fix coverage (`scripts/true_max_coverage.py`, $k=3$, $r=25$ km ranger radius):** a site covers every Salif Keita transit fix within 25 km. Exact OR-Tools and greedy both select **[0, 2, 5]**, covering 1,179 of 7,066 transit fixes (16.7%). The proxy's [0, 2, 7] covers 1,125 fixes (15.9% of all transit fixes, 95.4% of the true GPS-fix optimum). A 400 m camera radius was also tested: the eight centroids are 10–145 km apart, so almost no GPS fixes fall inside 400 m and no sites overlap. 25 km is therefore an explicit ranger-team assumption, not a camera detection range.
 
 **Timing methodology (mandate #2 — must be "rigorously timed"):** same machine, same problem instance, wall-clock time, mean ± std over multiple runs/seeds for all classical methods. Report this alongside the QAOA numbers even though at this $n$ classical is trivially faster — say so plainly rather than burying it.
 
@@ -135,7 +137,8 @@ Extend the proposal's repair step slightly:
 
 | Category | Metric | Result |
 |---|---|---|
-| Solution quality | Interception coverage vs. true optimum | True max-coverage & proxy QUBO: 100% (agree exactly). QAOA: 65% at $p\ge2$ |
+| Solution quality | Proxy QUBO vs. its own exact optimum | Exact/greedy proxy: 100% on [0, 2, 7]. QAOA: 65% at $p\ge2$ |
+| Solution quality | Unique transit fixes covered (25 km ranger radius) | True optimum [0, 2, 5]: 16.7%. Proxy [0, 2, 7]: 15.9% |
 | Computational | Wall-clock, exact/greedy/proxy (brute force, $n=8$) | Microseconds — trivially fast at this $n$, as expected (Section 7) |
 | Computational | Wall-clock, QAOA ($p=1,2,3$, local Aer, 3 restarts, 4096 shots) | 6.0s / 17.8s / 23.1s |
 | Quantum parameters | Approximation ratio vs. depth $p$ | -29% → 65% → 65% (Section 8) |
