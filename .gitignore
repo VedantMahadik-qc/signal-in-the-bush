@@ -3,3 +3,6 @@
 Q-Recover.pdf
 f1-quantum-strategy/
 ideation/
+
+__pycache__/
+*.pyc
