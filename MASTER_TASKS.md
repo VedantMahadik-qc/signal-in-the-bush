@@ -1,0 +1,16 @@
+# Remaining work — verified code audit
+
+The prototype is not complete. Audit: 2026-10-11. All four scripts parse, and independent numerical checks confirm the saved proxy optimum and QUBO/Ising equivalence. Full execution is blocked by missing pandas, scikit-learn, and folium; Python 3.11 has Aer, while default Python 3.14 does not. The landmark boost is implemented.
+
+- [ ] Make execution reproducible: choose a supported Python version, add dependency versions and setup/run instructions, install in an isolated environment, and rerun all four scripts from a clean checkout.
+- [ ] Fix candidate geometry: DBSCAN uses ~3.3 km connectivity but sensors assume 400 m range; the dominant cluster centroid covers zero visible GPS fixes within 400 m. Choose defensible representative sites or subdivide clusters, validate their local transit support, and enforce the <=15-site cap with a hard failure or explicit reduction rather than a warning.
+- [ ] Implement the promised GPS-fix coverage baseline: build actual within-radius coverage sets, run exact and greedy solvers, and compare proxy placements using that same metric; current code instead assigns entire cluster counts to centroid demand points (the advertised [0,2,7] covers 2 visible fixes at 400 m, not 6,923).
+- [ ] Validate conservation assumptions: justify sensor radius and transit threshold, check missing/duplicate timestamps and implausible speeds, label results as single-animal evidence, and verify the ~8 km Lake Banzena association and weight boost through documented evidence and sensitivity checks.
+- [ ] Establish an explicit QAOA output-selection rule and evaluate the sampled distribution: current code reports the mode, although saved samples contain the proxy optimum 10/146/190 times at p=1/2/3; report mode, best feasible sample, and optimal/feasible sampling rates separately.
+- [ ] Implement classical budget repair for over- and under-budget quantum outputs, save raw and repaired placements, and evaluate both against proxy and actual GPS coverage optima.
+- [ ] Correct metrics and timing: distinguish penalized proxy score from coverage (65% is not a coverage percentage), benchmark classical and hybrid methods over repeated runs/seeds with mean/std, seed sampling, record optimizer convergence and configuration, and regenerate results after the modeling fixes.
+- [ ] Connect the map to generated result files instead of hardcoded [0,2,7], show classical/raw-QAOA/repaired placements distinctly with detection ranges and accurate landmark labels, then verify rendering and accessibility.
+- [ ] Run the corrected pipeline on Qollab's IonQ simulator and retain backend, configuration, job evidence, timing, and results; the current harness only supports local Aer.
+- [ ] Reconcile README.md, TASKS.md, SUBMISSION.md, and demo/VIDEO_SCRIPT.md with verified results: remove unsupported coverage/timing/repair claims, update completion states, and state precisely which simulator ran.
+- [ ] Publish a runnable Qollab project with replication instructions, required attribution/disclosures/theme, repository link, and corrected summary; verify the public project from a logged-out browser.
+- [ ] Record and attach the two-minute demo video using the corrected map, results, and confirmed backend, and complete the final submission check.
