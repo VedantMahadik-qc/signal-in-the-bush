@@ -46,7 +46,9 @@ def distance_matrix(df):
 
 
 def build_overlap_matrix(d, r=R_METERS, w=1.0):
-    return w * np.maximum(0.0, 1.0 - d / r)
+    Q = w * np.maximum(0.0, 1.0 - d / r)
+    np.fill_diagonal(Q, 0.0)  # a site doesn't overlap-penalize itself
+    return Q
 
 
 def proxy_objective(x, c, Q, k, A):
