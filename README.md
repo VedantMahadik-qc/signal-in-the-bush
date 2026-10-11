@@ -72,6 +72,8 @@ Final sensor placement ───────────────────
 
 ## 6. Step 2 — QUBO Formulation
 
+**What this QUBO actually solves (credit: van, for asking):** this is **not** literal maximum coverage. True max-coverage needs a coverage-indicator variable per *demand point* (e.g. one per GPS fix within range of some site) so the objective can count each covered point once, not once per covering site — that's an OR, not a sum, and OR-logic over binary variables needs auxiliary variables you don't get for free. With thousands of fixes as potential demand points, that's thousands of extra qubits, wildly over the <16 cap. So instead, this formulation approximates coverage with a **pairwise proximity penalty** ($Q_{ij}$ below): instead of counting exactly which area is double-covered, it penalizes picking two sites close enough that they probably double-cover something. It's a budget-constrained weighted-selection problem with a redundancy penalty — closer to what van called a knapsack-with-proximity-penalty than to textbook max-coverage. This is the right call for staying inside the qubit budget, but it means the classical $1{-}1/e$ **guarantee doesn't transfer to this exact objective** — see Section 7 for how we handle that honestly.
+
 Variables:
 - $n$ candidate sites (8–14 target, hard cap 15), $x_i \in \{0,1\}$: sensor/team placed at site $i$.
 - $c_i \ge 0$: normalized coverage weight of site $i$. Default: normalized `n_fixes` from `data/candidate_sites.csv`. **Known issue (Section 5):** this underrates Lake Banzena (site_id=7), which external sources confirm is the population's primary dry-season water source despite having a low fix count. If time allows, manually boost $c_i$ for any site confirmed near a known landmark (e.g. $c_i \leftarrow \max(c_i, 0.5)$ for a confirmed match) rather than shipping the raw-frequency version uncorrected — otherwise the final writeup should at least name this as a known limitation.
@@ -92,10 +94,14 @@ Tradeoff to know about: this penalty softly biases toward using *exactly* $k$ si
 
 ## 7. Step 3 — Classical Baselines
 
-1. **Exact:** at $n \le 15$, this is literally brute-forceable ($2^{15}=32{,}768$ states) in microseconds, or solve the equivalent ILP via OR-Tools CP-SAT / PuLP for a cleaner comparison story. This is the ground truth, not just "a strong heuristic" — the proposal's own framing undersells it slightly.
-2. **Greedy:** the classical $1-1/e$ provable-approximation max-coverage heuristic — a real theoretical baseline, not ad hoc.
+Two different baselines, answering two different questions — don't collapse them into one "classical result":
 
-**Timing methodology (mandate #2 — must be "rigorously timed"):** same machine, same problem instance, wall-clock time, mean ± std over multiple runs/seeds for both classical methods. Report this alongside the QAOA numbers even though at this $n$ classical is trivially faster — say so plainly rather than burying it.
+1. **True max-coverage baseline (van's branch):** build real coverage sets — e.g. each candidate site covers the GPS fixes within radius $r$ of it — and solve genuine max-coverage: exact ILP for ground truth, greedy for the real, provable $1-1/e$-approximation heuristic (the guarantee holds here because this *is* the actual submodular set-cover problem). This answers "how good could sensor placement be if we weren't qubit-constrained at all," with $k$ fixed to whatever the team standardizes on (van used $k=3$ — fine, keep it unless there's a reason to change).
+2. **Proxy QUBO baseline:** exact brute-force optimum of the *same* pairwise-penalty objective in Section 6 ($n \le 15$, so $2^{15}=32{,}768$ states, microseconds). This is **not** relabeled as "the real optimum" — it's the ceiling for what QAOA is actually being asked to solve, and it's how you validate/tune the penalty weight $A$ before touching IonQ.
+
+**At submission time, report both comparisons, honestly labeled:** (a) QAOA vs. the proxy's own exact optimum — this is the real "how good is our QAOA" number; (b) the proxy's chosen sites evaluated under the *true* coverage metric vs. the true optimum from (1) — this is the honest "what did we give up by compressing into a QAOA-friendly proxy" number. Showing both is a better, more interesting result than hiding the gap.
+
+**Timing methodology (mandate #2 — must be "rigorously timed"):** same machine, same problem instance, wall-clock time, mean ± std over multiple runs/seeds for all classical methods. Report this alongside the QAOA numbers even though at this $n$ classical is trivially faster — say so plainly rather than burying it.
 
 ## 8. Step 4 — Quantum Pipeline
 

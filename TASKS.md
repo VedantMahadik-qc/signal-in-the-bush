@@ -13,12 +13,14 @@ Four tracks, sized to run in parallel. Full technical detail for every item is i
 - [x] Sanity-check against Wall et al. 2013 / external sources — **finding, not just a check:** `site_id=7` (65 fixes) sits ~8km from Lake Banzena, the documented primary dry-season water source for this entire elephant population (one of only two lakes that don't dry up; "elephants and humans rely heavily on it"). The *dominant* cluster `site_id=0` (6,603 fixes) is a different, unidentified location ~50km away. **Implication for Track B:** pure fix-count weighting underrates Banzena (currently weight 0.0098) relative to its real ecological importance — exactly the failure mode demonnslayer flagged, now confirmed in real data. Track B should consider a known-landmark boost, not just raw `n_fixes`, before finalizing $c_i$.
 
 ## Track B — QUBO & Classical Baselines
-- [ ] Start now against mock candidate sites (10 fake points + fake weights)
-- [ ] Build $Q_{overlap}$ from pairwise distance ([§6](README.md#6-step-2--qubo-formulation))
+Split in two, after van's correctness catch ([README §6-7](README.md#6-step-2--qubo-formulation)) — this is **not** literal max-coverage, it's a pairwise-penalty proxy, for qubit-budget reasons. Don't conflate the two baselines below.
+
+- [x] **True max-coverage baseline — van's branch.** Real coverage sets (fixes within radius $r$ of each site), exact ILP + greedy with the real $1{-}1/e$ guarantee, $k=3$. Van hit a push permission error on their branch — check their GitHub collaborator role is set to **Write** (not Read/Triage) in repo Settings → Collaborators, then merge it in.
+- [ ] **Proxy QUBO baseline — demonnslayer.** Build $Q_{overlap}$ from pairwise distance against the real `data/candidate_sites.csv` (not mock data — Track A is done)
 - [ ] Implement the soft-penalty QUBO — **not** `qiskit_optimization`'s inequality→slack converter (reread §6, it's a qubit-budget trap)
-- [ ] Exact brute-force / OR-Tools baseline, greedy $1{-}1/e$ baseline, both timed
-- [ ] Validate: does the QUBO's own optimum match the real constrained problem's optimum? Fix $A$ before handing off to Track C
-- [ ] Swap in Track A's real sites once available; re-validate
+- [ ] Apply the Lake Banzena landmark boost to $c_i$ (§5/§6) before finalizing weights
+- [ ] Exact brute-force optimum of the proxy QUBO itself, timed — this validates/tunes $A$, it is not the true-coverage baseline above
+- [ ] At the end: report QAOA-vs-proxy-optimum **and** proxy-result-vs-true-coverage-optimum as two separate numbers (§7) — don't collapse them
 
 ## Track C — QAOA / Qollab / IonQ Execution
 - [ ] Start now building the Qiskit harness against a toy random QUBO — don't wait on Track B
