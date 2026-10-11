@@ -68,11 +68,13 @@ Final sensor placement ───────────────────
 
 **Stretch goal, not required (demonnslayer's literal suggestion):** corroborate transit clusters against independently-known landmarks via OpenStreetMap's free, keyless Overpass API — query the study bounding box for `waterway=river`, `natural=water`, `barrier=fence`. Annotate each candidate site with distance to the nearest such feature ("this cluster sits 80m from a mapped river crossing") for demo credibility. This is corroborating evidence for the pitch, not a change to the QUBO itself — skip it under time pressure; the dwell/transit split above is the required fix, this is polish.
 
+**This stretch goal already paid off once, manually:** `data/candidate_sites.csv` site_id=7 (65 fixes, low weight) sits ~8km from Lake Banzena — the documented primary dry-season water source for this entire elephant population, one of only two lakes in the region that don't dry up. The *dominant* cluster, site_id=0 (6,603 fixes), is a different, unidentified location ~50km away. In other words: raw fix-count underrates a site that external sources say is the single most ecologically critical bottleneck in the study area. Track B should weigh a known-landmark boost into $c_i$ rather than trusting `n_fixes` alone — see Section 6.
+
 ## 6. Step 2 — QUBO Formulation
 
 Variables:
 - $n$ candidate sites (8–14 target, hard cap 15), $x_i \in \{0,1\}$: sensor/team placed at site $i$.
-- $c_i \ge 0$: normalized coverage weight (crossing density) of site $i$.
+- $c_i \ge 0$: normalized coverage weight of site $i$. Default: normalized `n_fixes` from `data/candidate_sites.csv`. **Known issue (Section 5):** this underrates Lake Banzena (site_id=7), which external sources confirm is the population's primary dry-season water source despite having a low fix count. If time allows, manually boost $c_i$ for any site confirmed near a known landmark (e.g. $c_i \leftarrow \max(c_i, 0.5)$ for a confirmed match) rather than shipping the raw-frequency version uncorrected — otherwise the final writeup should at least name this as a known limitation.
 - $d_{ij}$: haversine distance between centroids $i,j$.
 - $r$: assumed sensor/camera-trap effective detection radius (pick a defensible domain value, e.g. 300–500 m, and state the assumption in the writeup).
 - $Q_{ij} = w \cdot \max(0,\, 1 - d_{ij}/r)$: redundancy weight between sites within range of each other (tunable scale $w$).

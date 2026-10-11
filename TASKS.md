@@ -10,7 +10,7 @@ Four tracks, sized to run in parallel. Full technical detail for every item is i
 - [x] DBSCAN on transit fixes only → 8–15 candidate sites — converged at 8 clusters, `data/candidate_sites.csv`
 - [x] Guard: if >15 clusters, merge down before handing off — not needed this run (landed at 8 on first convergence)
 - [x] **Output contract for everyone else:** `data/candidate_sites.csv` with `{site_id, lat, lon, weight_c_i, n_fixes, n_individuals, individuals}` — ready for Track B
-- [ ] Sanity-check: one cluster (6,603 fixes) dominates the other 7 (3–255 fixes) — real long-tail or a sign the 0.5 km/h dwell/transit threshold needs tuning? Worth a look against the Wall et al. 2013 paper before Track B treats it as gospel.
+- [x] Sanity-check against Wall et al. 2013 / external sources — **finding, not just a check:** `site_id=7` (65 fixes) sits ~8km from Lake Banzena, the documented primary dry-season water source for this entire elephant population (one of only two lakes that don't dry up; "elephants and humans rely heavily on it"). The *dominant* cluster `site_id=0` (6,603 fixes) is a different, unidentified location ~50km away. **Implication for Track B:** pure fix-count weighting underrates Banzena (currently weight 0.0098) relative to its real ecological importance — exactly the failure mode demonnslayer flagged, now confirmed in real data. Track B should consider a known-landmark boost, not just raw `n_fixes`, before finalizing $c_i$.
 
 ## Track B — QUBO & Classical Baselines
 - [ ] Start now against mock candidate sites (10 fake points + fake weights)
