@@ -24,19 +24,20 @@ Split in two, after van's correctness catch ([README §6-7](README.md#6-step-2--
 
 ## Track C — QAOA / Qollab / IonQ Execution
 - [ ] Start now building the Qiskit harness against a toy random QUBO — don't wait on Track B
-- [ ] `SparsePauliOp` construction, QAOA ansatz, `SamplerV2` call against the IonQ simulator on Qollab
-- [ ] Get $p=1$ working and banked **first** — this is the result you can't afford to not have
-- [ ] Then $p=2, 3$ if the queue and clock allow
-- [ ] Log shots, depth, wall-clock for every run (feeds the metrics table, [§10](README.md#10-evaluation-metrics))
-- [ ] Swap in Track B's real QUBO once validated
+- [x] `SparsePauliOp` construction, QAOA ansatz, `SamplerV2` — `scripts/run_qaoa.py`, run on local Aer
+- [x] $p=1,2,3$ all run and banked — 65% approximation ratio plateau from $p=2$ ([README §8](README.md#8-step-4--quantum-pipeline))
+- [x] Shots/depth/wall-clock logged (`data/qaoa_result_p*.txt`)
+- [x] Ran against the real QUBO (not mock)
+- [ ] **Still open: run on Qollab's actual IonQ simulator**, not just local Aer — needs whoever has Qollab access
 
 ## Track D — Demo, Repo Hygiene, Video
 - [x] Root `LICENSE` (MIT) + mandatory attribution string — done
-- [ ] Folium/Plotly map — build against mock sites first, swap to real data last
-- [ ] Before/after coverage heatmap
-- [ ] Assemble the metrics table from B + C's numbers
-- [ ] 2-min video pitch — record **last**, once something real is on screen
-- [ ] Final pass: confirm repo README, attribution string, and dataset citation are all still accurate after everyone's merged
+- [x] Interactive map — `demo/map.html`, real data, no mock swap needed (Track A finished first)
+- [x] Metrics table assembled from B + C's real numbers ([README §10](README.md#10-evaluation-metrics))
+- [x] Written summary + disclosures + theme tag — `SUBMISSION.md` (required by the official rules, separate from README)
+- [ ] 2-min video pitch — script ready (`demo/VIDEO_SCRIPT.md`), **not yet recorded**
+- [ ] **Publish to Qollab.xyz itself** — separate requirement from the GitHub repo; needs a Qollab project page with the SUBMISSION.md content
+- [ ] Final pass: open the published Qollab project from a logged-out browser before the deadline and confirm it runs start to finish (official rules, Submission requirements)
 
 ## Dependencies at a glance
 

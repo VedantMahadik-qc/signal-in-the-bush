@@ -10,7 +10,9 @@ This project was selected through the team's internal decision-matrix process (1
 
 **Submission deadline is today:** Sunday, Oct 11, 7:00 PM ET.
 
-Task breakdown for the team: [`TASKS.md`](TASKS.md).
+Task breakdown for the team: [`TASKS.md`](TASKS.md). Required judging-criteria summary and disclosures: [`SUBMISSION.md`](SUBMISSION.md). Interactive demo map: [`demo/map.html`](demo/map.html).
+
+**Pipeline status:** Tracks A (data), B (QUBO + true baseline), and C (QAOA) are done and validated end to end on real data — run in order: `scripts/extract_pinch_points.py` → `scripts/build_qubo.py` → `scripts/run_qaoa.py` → `scripts/build_demo_map.py`. Both baselines and the QAOA pipeline agree the right 3 sites are [0, 2, 7] (includes Lake Banzena); QAOA's own approximation ratio plateaus at 65% (Section 8). Still open: publishing to Qollab.xyz itself and running on their IonQ simulator specifically (everything above ran locally, per Section 13's advice to validate off the shared queue first), and the demo video.
 
 ## 1. Executive Summary
 
@@ -101,6 +103,8 @@ Two different baselines, answering two different questions — don't collapse th
 
 **At submission time, report both comparisons, honestly labeled:** (a) QAOA vs. the proxy's own exact optimum — this is the real "how good is our QAOA" number; (b) the proxy's chosen sites evaluated under the *true* coverage metric vs. the true optimum from (1) — this is the honest "what did we give up by compressing into a QAOA-friendly proxy" number. Showing both is a better, more interesting result than hiding the gap.
 
+**Result (`scripts/build_qubo.py`, $n=8$, $k=3$, $r=400$m):** both baselines agree exactly — true max-coverage exact, true max-coverage greedy, and the proxy QUBO's own exact optimum all select the same 3 sites, **[0, 2, 7]** (site 7 = Lake Banzena), at **100% of true-optimum coverage** (6,923 of 6,923 fixes). Greedy's approximation ratio is 1.000 here (guarantee only required $\ge 0.632$). The proxy formulation cost nothing at this scale — gap (b) above is 0%. Robust across a penalty-weight ($A$) sweep from 0.5 to 5.0.
+
 **Timing methodology (mandate #2 — must be "rigorously timed"):** same machine, same problem instance, wall-clock time, mean ± std over multiple runs/seeds for all classical methods. Report this alongside the QAOA numbers even though at this $n$ classical is trivially faster — say so plainly rather than burying it.
 
 ## 8. Step 4 — Quantum Pipeline
@@ -108,6 +112,18 @@ Two different baselines, answering two different questions — don't collapse th
 - Map $C(x)$ to a `SparsePauliOp` Ising Hamiltonian.
 - Run QAOA at depth $p \in \{1, 2, 3\}$ via Qiskit 2.x primitives (`SamplerV2`) on the IonQ simulator through Qollab.
 - Record shot count, depth, and wall-clock per run — these are the actual "quantum parameters" metrics called for below, and the thing worth plotting against approximation ratio.
+
+**Implementation note:** the standard `qiskit_optimization` QP→QUBO→Ising converter is not used (that's the slack-variable path Section 6 warns against). Instead `scripts/run_qaoa.py` builds $h_i$, $J_{ij}$ directly from $a_i$, $b_{ij}$ (the cost-direction QUBO coefficients) via the standard $x_i=(1-z_i)/2$ substitution, then **numerically validates** the resulting Ising Hamiltonian against the already brute-force-verified QUBO objective — for every one of the $2^n$ bitstrings, not a spot check — before building any circuit. This caught two real bugs during development: an unzeroed diagonal in the overlap matrix (giving every site a spurious self-penalty) and a broken approximation-ratio formula (blew up near zero because it was computed against the shifted/negated cost instead of the original objective). Both are fixed in the current code; the lesson generalizes — don't trust a QUBO→Ising conversion on algebra alone when you can brute-force-check it in milliseconds at this $n$.
+
+**Results (local Aer simulator; run `python scripts/run_qaoa.py`):**
+
+| $p$ | approx. ratio vs. true optimum | sites found |
+|---|---|---|
+| 1 | -29% (unconverged) | [1, 2, 4, 5] |
+| 2 | 65% | [0, 7] |
+| 3 | 65% | [0, 7] |
+
+QAOA improves sharply from $p=1$ to $p=2$, then plateaus — it never finds the true 3-site optimum ([0, 2, 7], Section 7) at any tested depth, landing instead on a strong-but-suboptimal 2-site answer. Reported as-is rather than cherry-picked; this is the honest "where QAOA stands" data Section 2 promised. **Run locally on Aer so far** (per this report's own advice to validate off the shared simulator queue first) — running on Qollab's actual IonQ simulator specifically is still open.
 
 ## 9. Step 5 — Classical Feasibility Repair
 
@@ -117,28 +133,44 @@ Extend the proposal's repair step slightly:
 
 ## 10. Evaluation Metrics
 
-| Category | Metric |
-|---|---|
-| Solution quality | Expected interception coverage (%), redundancy wasted, budget utilization |
-| Computational | Wall-clock to best feasible solution, approximation ratio vs. exact optimum |
-| Quantum parameters | Approximation ratio vs. depth $p$, vs. shot count |
+| Category | Metric | Result |
+|---|---|---|
+| Solution quality | Interception coverage vs. true optimum | True max-coverage & proxy QUBO: 100% (agree exactly). QAOA: 65% at $p\ge2$ |
+| Computational | Wall-clock, exact/greedy/proxy (brute force, $n=8$) | Microseconds — trivially fast at this $n$, as expected (Section 7) |
+| Computational | Wall-clock, QAOA ($p=1,2,3$, local Aer, 3 restarts, 4096 shots) | 6.0s / 17.8s / 23.1s |
+| Quantum parameters | Approximation ratio vs. depth $p$ | -29% → 65% → 65% (Section 8) |
 
-Plot approximation ratio vs. $p$ and vs. shot count — crossover/plateau behavior is a more interesting result than a single final number, and gives you something honest to say if the numbers are modest.
+Plateau from $p=2$ to $p=3$ is the actual finding here, not a single final number — more restarts/iterations might close the gap to the true 3-site optimum, but weren't pursued further given the build-window time budget; noted as a follow-up, not hidden as a limitation.
 
 ## 11. Demo & Visualization
 
-- Interactive map (Folium or Plotly Mapbox): real elephant GPS trail as a glowing corridor, pinch-points pulsing as candidates, sensors flipping on as the optimizer runs, ending on a before/after coverage heatmap.
-- 2-minute video pitch: ~45s problem framing, ~45s live map demo, ~30s benchmark metrics + IonQ execution proof (screenshot/log of the actual Qollab/IonQ job, not just local simulation — judges will ask).
+- **Interactive map — done:** [`demo/map.html`](demo/map.html) (built by `scripts/build_demo_map.py`). Real GPS trail (Salif Keita, 2008–2014), all 8 candidate sites sized/colored by weight, the 3 selected sites highlighted gold (including Lake Banzena, labeled), dwell/rest sites shown as a gray context layer. Open it directly in a browser — no server needed.
+- **2-minute video pitch:** script in [`demo/VIDEO_SCRIPT.md`](demo/VIDEO_SCRIPT.md) — not yet recorded. Note before recording: say explicitly whether QAOA ran on Qollab's actual IonQ simulator or only validated locally on Aer (true as of this writing) — judges will ask, and the honest answer is a better look than an implied claim that doesn't hold up.
 
 ## 12. Hackathon Compliance Checklist
 
-| Mandate | Status |
+Full list per the official Participant Plan PDF's submission requirements, not just the original 4-item ideation mandate:
+
+| Requirement | Status |
 |---|---|
 | Recognized public dataset | ✅ Movebank Data Repository, CC0, DOI-backed (Section 3) |
-| Classical baseline rigorously timed vs. hybrid | ⬜ Plan defined (Section 7) — not yet run |
-| Quantum problem **under 16 qubits** (i.e. ≤15) | ✅ by construction if Section 5's cluster-count guard is enforced |
+| Classical baseline rigorously timed vs. hybrid | ✅ Run, both baselines agree (Section 7) |
+| Quantum problem **under 16 qubits** (i.e. ≤15) | ✅ 8 qubits, by construction (Section 5's cluster-count guard) |
+| Built with the Qiskit framework | ✅ Qiskit 2.x throughout |
+| Runs on the quantum simulator available through Qollab | ❌ **Ran on local Aer only so far — not yet on Qollab's own IonQ simulator.** Say this honestly in the video if still true when recorded |
+| Published and runnable on Qollab.xyz | ❌ **Not yet published.** No account/credentials available to do this outside the team — needs direct action on qollab.xyz |
+| A Qollab project page (what/how/replicate) | ❌ Content drafted in [`SUBMISSION.md`](SUBMISSION.md), needs to actually go on the Qollab page |
+| Built during the Oct 9–11 build window | ✅ |
+| UI accessibility best practices | ⬜ Not specifically audited — lower priority given time, but a 5-minute pass (color contrast, alt text) on whatever ships on Qollab's page is worth it if time allows |
+| Written summary (all 4 judging criteria) | ✅ [`SUBMISSION.md`](SUBMISSION.md) |
 | Repo MIT-licensed | ✅ Root [`LICENSE`](LICENSE) |
-| Mandatory attribution string present | ✅ At the top of this file |
+| Mandatory attribution string | ✅ Top of this file, `SUBMISSION.md`, and root `README.md`'s predecessor |
+| Disclosure of libraries / AI tool use | ✅ [`SUBMISSION.md`](SUBMISSION.md) |
+| Theme tag | ✅ Quantum Impact (stated in `SUBMISSION.md` — also set it explicitly on the Qollab.xyz submission form) |
+| Short demo video | ❌ Script ready ([`demo/VIDEO_SCRIPT.md`](demo/VIDEO_SCRIPT.md)), not recorded |
+| Code repository link | ✅ This repo, live on GitHub |
+
+**The two blocking ❌ items both require direct action on qollab.xyz that nobody has access to script/automate — they're the critical path to an actual submission, not the code.**
 
 ## 13. Execution Plan (time-budget-resilient)
 
