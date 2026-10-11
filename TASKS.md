@@ -5,11 +5,12 @@ Four tracks, sized to run in parallel. Full technical detail for every item is i
 **The unlock: don't go fully sequential.** Track A (data) is the only hard blocker on real numbers, but B, C, and D can all start immediately against **mock data** — a fake list of 10 candidate sites with made-up coordinates and weights — and swap in A's real output once it lands. Waiting on A to finish before starting B/C/D wastes most of the team's remaining time.
 
 ## Track A — Data & Corridor Extraction (critical path — start first)
-- [ ] Download the primary dataset CSV ([README §3](README.md#3-dataset--verified-this-session)), confirm actual individual/animal count in the data
-- [ ] Implement dwell/transit speed split (the demonnslayer fix — [§5](README.md#5-step-1--corridor--pinch-point-extraction))
-- [ ] DBSCAN on transit fixes only → 8–15 candidate sites
-- [ ] Guard: if >15 clusters, merge down before handing off
-- [ ] **Output contract for everyone else:** a CSV/JSON of `{site_id, lat, lon, weight_c_i}` — publish this as soon as you have even a rough version, don't wait for it to be polished
+- [x] Download the primary dataset CSV ([README §3](README.md#3-dataset--downloaded-and-verified)) — done; discovered it bundles 2 unrelated elephants (Mali + Kenya), scoped to Salif Keita (Mali/Gourma) only
+- [x] Implement dwell/transit speed split (the demonnslayer fix — [§5](README.md#5-step-1--corridor--pinch-point-extraction)) — `scripts/extract_pinch_points.py`
+- [x] DBSCAN on transit fixes only → 8–15 candidate sites — converged at 8 clusters, `data/candidate_sites.csv`
+- [x] Guard: if >15 clusters, merge down before handing off — not needed this run (landed at 8 on first convergence)
+- [x] **Output contract for everyone else:** `data/candidate_sites.csv` with `{site_id, lat, lon, weight_c_i, n_fixes, n_individuals, individuals}` — ready for Track B
+- [ ] Sanity-check: one cluster (6,603 fixes) dominates the other 7 (3–255 fixes) — real long-tail or a sign the 0.5 km/h dwell/transit threshold needs tuning? Worth a look against the Wall et al. 2013 paper before Track B treats it as gospel.
 
 ## Track B — QUBO & Classical Baselines
 - [ ] Start now against mock candidate sites (10 fake points + fake weights)

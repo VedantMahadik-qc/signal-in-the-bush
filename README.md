@@ -22,20 +22,17 @@ At 8–14 binary variables, the search space is at most $2^{14} = 16{,}384$ stat
 
 So the honest pitch is: this is an end-to-end hybrid pipeline — real conservation data → corridor extraction → QUBO → QAOA → classical feasibility repair → validated decision — proven to work, with data showing *where QAOA stands* (approximation ratio vs. depth $p$, vs. the exact classical optimum) rather than an overclaimed "quantum beats classical" result. Lead with the real-data pipeline and the conservation framing; let the benchmark numbers be exactly as good (or modest) as they actually are.
 
-## 3. Dataset — Verified This Session
+## 3. Dataset — Downloaded and Verified
 
-**Primary: Movebank Data Repository — Wall et al. 2014, African elephant tracking (source: Save the Elephants)**
-- URL: https://datarepository.movebank.org/entities/datapackage/38e05433-0a6f-49c4-ab77-0511e716786c
-- License: **CC0 1.0 Universal** (public domain)
-- Access: **no account or login required** — direct bitstream download links on the page
-- Format/size: main tracking data as CSV (~6.9 MB), a small reference-data CSV, and a `README.txt`
-- This is a citable, DOI-backed public dataset, satisfying hackathon mandate #1 ("must use a recognized public dataset").
+**Wall, Wittemyer, LeMay, Douglas-Hamilton & Klinkenberg (2014), African elephant GPS tracking (source: Save the Elephants)**
+- Data package DOI: `10.5441/001/1.f321pf80` — citable, satisfies hackathon mandate #1 ("must use a recognized public dataset")
+- License: **CC0 1.0 Universal** (public domain), citation requested but not required
+- Downloaded directly via the Movebank Data Repository's REST API, no account needed: `data/elephant_gps_raw.csv` (23,494 fixes), `data/elephant_reference_data.csv`, `data/README_dataset.txt`
+- Methods paper: Wall et al. 2014, *Methods in Ecology and Evolution*, doi:10.1111/2041-210X.12218
 
-**Caveat (verify on download, don't assume):** search evidence converging on this same Wall et al. 2014 / Save the Elephants study independently describes a Samburu National Reserve, Kenya program with 23,494 GPS fixes at 1-hour intervals, 9 elephants collared but only **2 published** to the public Movebank record — while a direct fetch of the dataset's own landing page read it as a single individual. Both could be describing the same package inconsistently (page-summarization artifacts, not a confirmed contradiction). **Action:** download the CSV first thing and check the individual-ID column yourself — don't build the demo narrative on an unconfirmed animal count.
+**What's actually in the file (checked against real data, not a page summary):** two elephants, **not** one population. "Salif Keita" (21,972 fixes, 2008–2014) is in the **Gourma region of Mali** (lon ≈ -1.8 to -2.6, lat ≈ 14.5–15.6, UTM zone 30N) — part of the population known for the longest documented land migration of any African elephant. "Habiba" (330 fixes) is a completely separate individual in **central Kenya** (lon ≈ 37.6, lat ≈ 0.6), thousands of km away. The source paper used both as independent method-demonstration examples, not as a shared habitat — so **this project uses Salif Keita only** (`INDIVIDUAL_FILTER` in `scripts/extract_pinch_points.py`); mixing two unrelated populations into one sensor-placement budget wouldn't be ecologically meaningful.
 
-**Why this doesn't break the plan either way:** with 1–2 individuals, "pinch point" should be framed as *a location this animal/herd repeatedly revisits* (watering hole, river crossing, migration bottleneck) rather than *where multiple animals' paths cross* — which is still ecologically correct and still exactly where a ranger would want a camera trap. Reframe the demo copy accordingly rather than overstating multi-animal convergence.
-
-**Backup, not yet verified:** [`ThermochronTracking Elephants Kruger 2007`](https://datarepository.movebank.org/items/34c4e37d-9989-473e-aa5a-187e35205d85) (Slotow, Thaker, Vanak) is on the same repository. Its page is JS-rendered and didn't yield details to an automated fetch this session — if the primary dataset turns out too sparse for a convincing corridor map, this is a two-minute manual check, not a research detour.
+Bonus: there's a dedicated paper on exactly this population's movement — Wall, Wittemyer, Klinkenberg, LeMay & Douglas-Hamilton (2013), "Characterizing properties and drivers of long distance movements by elephants (*Loxodonta africana*) in the Gourma, Mali," *Biological Conservation*, doi:10.1016/j.biocon.2012.07.019. Worth skimming for the demo narrative and as a literature cross-check on whether our extracted pinch-points land near known movement drivers (this is the non-GPS corroboration demonnslayer asked for, if there's time).
 
 ## 4. Pipeline
 
@@ -165,9 +162,9 @@ Phases are relative, not clock-anchored, since I don't know how many hours are a
 ## 15. Immediate Next Steps
 
 1. ~~Add root `LICENSE` (MIT) + attribution string~~ — done.
-2. Download the primary dataset CSV and confirm individual count (unblocks everything else).
-3. Scaffold the dwell/transit split + DBSCAN corridor-extraction script.
-4. Build the QUBO + classical baselines, validate QUBO optimum against real-problem optimum before touching IonQ.
+2. ~~Download the primary dataset CSV and confirm individual count~~ — done, see Section 3. Scoped to Salif Keita (Gourma, Mali); Habiba excluded (unrelated population).
+3. ~~Scaffold the dwell/transit split + DBSCAN corridor-extraction script~~ — done, `scripts/extract_pinch_points.py`. Converged at eps=3296m to 8 transit clusters (within the 8–15 target); output in `data/candidate_sites.csv`. One cluster (6,603 fixes) heavily dominates the other 7 (3–255 fixes each) — a real, expected long-tail for a single-animal migratory corridor, not a bug, but worth a sanity-check against the Wall et al. 2013 paper's described movement drivers before trusting it blindly.
+4. Build the QUBO + classical baselines from `data/candidate_sites.csv`, validate QUBO optimum against real-problem optimum before touching IonQ.
 
 See [`TASKS.md`](TASKS.md) for how this splits across the team.
 
@@ -175,6 +172,6 @@ See [`TASKS.md`](TASKS.md) for how this splits across the team.
 
 ## Sources
 
-- [Movebank Data Repository — Wall et al. 2014 African elephant dataset (primary, verified: CC0, no login, CSV)](https://datarepository.movebank.org/entities/datapackage/38e05433-0a6f-49c4-ab77-0511e716786c)
-- [ThermochronTracking Elephants Kruger 2007 (backup, not yet verified)](https://datarepository.movebank.org/items/34c4e37d-9989-473e-aa5a-187e35205d85)
-- [Movebank Data Repository — no-account-required CC0 policy](https://datarepository.movebank.org/help/faq)
+- [Movebank Data Repository — Wall et al. 2014 African elephant dataset](https://datarepository.movebank.org/entities/datapackage/38e05433-0a6f-49c4-ab77-0511e716786c) — downloaded and verified this session (doi:10.5441/001/1.f321pf80)
+- Wall J, Wittemyer G, LeMay V, Douglas-Hamilton I, Klinkenberg B (2014) Elliptical Time-Density model to estimate wildlife utilization distributions. *Methods in Ecology and Evolution*. doi:10.1111/2041-210X.12218
+- Wall J, Wittemyer G, Klinkenberg B, LeMay V, Douglas-Hamilton I (2013) Characterizing properties and drivers of long distance movements by elephants (*Loxodonta africana*) in the Gourma, Mali. *Biological Conservation* 157:60–68. doi:10.1016/j.biocon.2012.07.019
